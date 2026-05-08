@@ -1,0 +1,128 @@
+{% extends "app/templates/base.html" %}
+
+{% block content %}
+<section class="section-heading">
+  <p class="eyebrow">Feature 01</p>
+  <h1>OCI Generative AI + Oracle Agent Memory demo</h1>
+  <p class="lead-copy">
+    Capture thread history, extract durable memory, and test recall. The site uses a live OCI-backed
+    path when the Oracle AI Database and OCI values are ready, then falls back to a local mock so the
+    multipage app still runs during setup.
+  </p>
+  <div class="status-strip">
+    <span class="status-badge {{ 'is-mock' if service_status.mode == 'mock' else '' }}">{{ service_status.label }}</span>
+    <span class="status-note">{{ service_status.reason }}</span>
+  </div>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Drive the thread</h2>
+    <form class="form-grid" method="post" action="{{ request.url_for('agent_memory_demo_post') }}">
+      <input type="hidden" name="thread_id" value="{{ demo_state.thread_id or '' }}">
+      <div class="field-row">
+        <label>
+          User ID
+          <input type="text" name="user_id" value="{{ demo_state.user_id }}">
+        </label>
+        <label>
+          Agent ID
+          <input type="text" name="agent_id" value="{{ demo_state.agent_id }}">
+        </label>
+      </div>
+      <label>
+        User message
+        <textarea name="user_message" placeholder="Example: I prefer crisp dashboards and my team runs quarterly planning on Fridays."></textarea>
+      </label>
+      <label>
+        Assistant reply override
+        <textarea name="assistant_message" placeholder="Leave blank to let the starter generate or simulate the assistant reply."></textarea>
+      </label>
+      <label>
+        Manual memory
+        <input type="text" name="manual_memory" placeholder="Optional durable fact to add explicitly">
+      </label>
+      <label>
+        Search query
+        <input type="text" name="search_query" placeholder="Search stored messages and memories">
+      </label>
+      <div class="button-row">
+        <button type="submit" name="action" value="submit">Submit turn</button>
+        <button class="secondary" type="submit" name="action" value="reset">Reset state</button>
+      </div>
+    </form>
+  </article>
+
+  <div class="stack">
+    <article class="panel">
+      <h2>Runtime view</h2>
+      <div class="metrics">
+        <div class="metric">
+          <span class="label">Thread</span>
+          <strong>{{ demo_state.thread_id or 'Not created' }}</strong>
+        </div>
+        <div class="metric">
+          <span class="label">Messages shown</span>
+          <strong>{{ demo_state.messages|length }}</strong>
+        </div>
+        <div class="metric">
+          <span class="label">Search hits</span>
+          <strong>{{ demo_state.search_results|length }}</strong>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Thread summary</h2>
+      <p>{{ demo_state.summary }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Conversation</h2>
+    <div class="message-list">
+      {% if demo_state.messages %}
+        {% for message in demo_state.messages %}
+        <article class="message" data-role="{{ message.role }}">
+          <header>
+            <strong>{{ message.role }}</strong>
+            <span>{{ message.timestamp }}</span>
+          </header>
+          <p>{{ message.content }}</p>
+        </article>
+        {% endfor %}
+      {% else %}
+        <p>No messages yet. Submit a turn to create the thread.</p>
+      {% endif %}
+    </div>
+  </article>
+
+  <div class="stack">
+    <article class="panel">
+      <h2>Context card</h2>
+      <pre class="code-block"><code>{{ demo_state.context_card }}</code></pre>
+    </article>
+
+    <article class="panel">
+      <h2>Memory search</h2>
+      <div class="memory-list">
+        {% if demo_state.search_results %}
+          {% for item in demo_state.search_results %}
+          <article class="memory-item">
+            <header>
+              <strong>{{ item.kind }}</strong>
+              <span>{{ item.score or 'n/a' }}</span>
+            </header>
+            <p>{{ item.content }}</p>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>Enter a search query to inspect durable memories and prior messages.</p>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

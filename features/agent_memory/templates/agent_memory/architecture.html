@@ -1,0 +1,55 @@
+{% extends "app/templates/base.html" %}
+
+{% block content %}
+<section class="section-heading">
+  <p class="eyebrow">Architecture</p>
+  <h1>First feature slice: governed memory around OCI-backed assistant flows</h1>
+  <p class="lead-copy">
+    The website shell stays generic, while the agent-memory feature owns its own routes, templates,
+    service code, docs, and Terraform stack. That keeps future enterprise AI demos isolated by folder.
+  </p>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Request flow</h2>
+    <ul class="plain-list stack">
+      {% for step in architecture_steps %}
+      <li>{{ step }}</li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>Feature boundary</h2>
+    <pre class="code-block"><code>features/
+  agent_memory/
+    infra/terraform/
+    templates/agent_memory/
+    router.py
+    service.py
+    README.md</code></pre>
+  </article>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Enterprise AI concerns covered here</h2>
+    <ul class="plain-list stack">
+      <li>Thread-level memory capture for short-term context.</li>
+      <li>Durable memory storage and recall for user preferences, team facts, and recurring work patterns.</li>
+      <li>Feature-specific infrastructure so OCI setup can evolve without polluting unrelated pages.</li>
+      <li>A controlled mock mode that keeps the app usable before OCI credentials are provisioned.</li>
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>Next feature candidates</h2>
+    <ul class="plain-list stack">
+      <li><code>features/retrieval_workbench/</code> for RAG over enterprise knowledge.</li>
+      <li><code>features/evals_console/</code> for prompt and response quality checks.</li>
+      <li><code>features/workflow_agent/</code> for tool-using agents and approvals.</li>
+    </ul>
+  </article>
+</section>
+{% endblock %}

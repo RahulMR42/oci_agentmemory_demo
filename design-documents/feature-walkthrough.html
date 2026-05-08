@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OCI Agent Memory Console Walkthrough</title>
+  <style>
+    body {
+      margin: 0;
+      background: #eef2f7;
+      color: #101828;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+    aside {
+      background: #f8fafc;
+      border-right: 1px solid #d8dee9;
+      padding: 24px 18px;
+    }
+    main {
+      padding: 22px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #d8dee9;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .eyebrow {
+      color: #2f5bea;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    h1, h2 {
+      margin: 8px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .metric, .step {
+      background: #f8fafc;
+      border: 1px solid #e3e8f0;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .step strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tabs span {
+      background: #edf2ff;
+      border: 1px solid #d9e2ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #2f5bea;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .highlight {
+      animation: pulse 3s infinite;
+      border-color: #2f5bea;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(47, 91, 234, 0); }
+      50% { box-shadow: 0 0 0 5px rgba(47, 91, 234, .12); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="panel highlight">
+        <div class="eyebrow">Configuration</div>
+        <h2>OCI Agent Memory Console</h2>
+        <p>Main, Config, and Keys keep setup separate from the demo workspace.</p>
+      </div>
+      <p><strong>Workspace</strong></p>
+      <p>Overview<br>OpenAI SDK<br>LangGraph</p>
+    </aside>
+    <main>
+      <section class="panel">
+        <div class="eyebrow">Workspace</div>
+        <h1>LangGraph Workspace</h1>
+        <p>Compare graph orchestration against the same Oracle Agent Memory backend.</p>
+      </section>
+      <section class="panel grid">
+        <div class="metric"><strong>Memory user</strong><br>ociopenai / ocigraph</div>
+        <div class="metric"><strong>Thread</strong><br>Pending</div>
+        <div class="metric"><strong>Messages</strong><br>0</div>
+        <div class="metric"><strong>Last activity</strong><br>No turns yet</div>
+      </section>
+      <section class="panel">
+        <div class="eyebrow">Live call and retrieval path</div>
+        <h2>Execution flow</h2>
+        <div class="flow">
+          <div class="step highlight"><strong>1. Thread</strong>Open or create memory thread.</div>
+          <div class="step"><strong>2. Recall</strong>Load summary, context card, and hits.</div>
+          <div class="step"><strong>3. API call</strong>Call OCI Responses.</div>
+          <div class="step"><strong>4. Persist</strong>Store completed turn.</div>
+          <div class="step"><strong>5. Refresh</strong>Update chat and diagnostics.</div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="eyebrow">Bottom diagnostics</div>
+        <div class="tabs">
+          <span>Logs</span><span>Call</span><span>Retrieval Code</span><span>API</span><span>Time</span><span>Other</span>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

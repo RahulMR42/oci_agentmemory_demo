@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page_title }} | Enterprise AI Feature Studio</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='styles.css') }}">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="{{ request.url_for('home') }}">
+          <span class="brand-mark">EA</span>
+          <span class="brand-copy">
+            <strong>Enterprise AI Feature Studio</strong>
+            <small>FastAPI + OCI starter</small>
+          </span>
+        </a>
+        <nav class="site-nav">
+          <a class="{{ 'is-active' if active_nav == 'home' else '' }}" href="{{ request.url_for('home') }}">Home</a>
+          <a class="{{ 'is-active' if active_nav == 'demo' else '' }}" href="{{ request.url_for('agent_memory_demo') }}">Demo</a>
+          <a class="{{ 'is-active' if active_nav == 'architecture' else '' }}" href="{{ request.url_for('agent_memory_architecture') }}">Architecture</a>
+          <a class="{{ 'is-active' if active_nav == 'infra' else '' }}" href="{{ request.url_for('agent_memory_infra') }}">Infra</a>
+        </nav>
+      </header>
+
+      <main class="site-main">
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="site-footer">
+        <p>Feature pages live under <code>features/</code>, so each enterprise AI capability can own its app code, templates, docs, and infrastructure.</p>
+      </footer>
+    </div>
+  </body>
+</html>
