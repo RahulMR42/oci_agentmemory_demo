@@ -992,7 +992,7 @@ def _render_login(settings) -> None:
         <div class="login-card">
           <p class="eyebrow">Sign in</p>
           <h1>{escape(APP_TITLE)}</h1>
-          <p class="subtitle">Use the local demo login to open the live console. The default username is <strong>oci</strong>.</p>
+          <p class="subtitle">Use the local demo login to open the live console. The default username is <strong>{escape(settings.demo_username)}</strong>.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1006,6 +1006,13 @@ def _render_login(settings) -> None:
         st.text_input("Username", key="login_username")
         st.text_input("Password", key="login_password", type="password")
         submitted = st.form_submit_button("Enter workspace", use_container_width=True)
+
+    if st.button("Forgot password", key="forgot-demo-password", use_container_width=True):
+        print(
+            f"[Agent Memory Demo] Login username: {settings.demo_username} | password: {settings.demo_password}",
+            flush=True,
+        )
+        st.info("Password printed to the Streamlit server console.")
 
     if submitted:
         username = st.session_state.login_username.strip()

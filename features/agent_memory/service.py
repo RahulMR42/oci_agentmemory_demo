@@ -703,19 +703,52 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
 
         try:
             from wayflowcore.agent import Agent
-            from wayflowcore.models import OpenAIAPIType, OpenAICompatibleModel
+            from wayflowcore.messagelist import Message
+            from wayflowcore.models import (
+                LlmCompletion,
+                OpenAIAPIType,
+                OpenAICompatibleModel,
+                Prompt,
+                StreamChunkType,
+            )
         except ImportError as exc:
             raise RuntimeError(
                 "WayFlow workspace requires `wayflowcore`. Run `pip install -e .` to install project dependencies."
             ) from exc
 
         project_headers = _project_headers(self._settings)
+        responses_client = OciResponsesClient(self._settings)
 
         class OciResponsesWayFlowModel(OpenAICompatibleModel):
             def _get_headers(self) -> dict[str, object]:
                 headers = super()._get_headers()
                 headers.update(project_headers)
                 return headers
+
+            @staticmethod
+            def _prompt_text(prompt: Prompt) -> str:
+                parts: list[str] = []
+                for message in prompt.messages:
+                    content = message.content.strip()
+                    if content:
+                        parts.append(f"{message.role.upper()}:\n{content}")
+                return "\n\n".join(parts)
+
+            async def _generate_impl(self, prompt: Prompt) -> LlmCompletion:
+                reply = responses_client.generate(prompt=self._prompt_text(prompt))
+                message = prompt.parse_output(Message(content=reply, role="assistant"))
+                return LlmCompletion(message=message, token_usage=None)
+
+            async def _stream_generate_impl(self, prompt: Prompt):
+                message = prompt.parse_output(
+                    Message(
+                        content=responses_client.generate(prompt=self._prompt_text(prompt)),
+                        role="assistant",
+                    )
+                )
+                yield StreamChunkType.START_CHUNK, Message(content="", role="assistant"), None
+                yield StreamChunkType.TEXT_CHUNK, Message(content=message.content, role="assistant"), None
+                yield StreamChunkType.END_CHUNK, message, None
 
         model = OciResponsesWayFlowModel(
             model_id=self._settings.oci_genai_chat_model,
