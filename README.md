@@ -4,6 +4,7 @@ An enterprise-ready Streamlit demo for Oracle Agent Memory with OCI Generative A
 
 - **OpenAI SDK path**: direct OCI Responses calls through the OpenAI-compatible SDK.
 - **LangGraph path**: explicit `StateGraph` orchestration using the same Oracle Agent Memory backend.
+- **WayFlow path**: Oracle WayFlow `Agent` conversation over the same retrieved memory context.
 
 The app is intentionally built as an operations console. It shows the chat, live execution flow, retrieved memory, backend logs, API metadata, and the actual retrieval-code path used during each turn.
 
@@ -19,9 +20,11 @@ Video version: [agent-memory-ui-flow.mp4](design-documents/video/agent-memory-ui
 - OCI Generative AI Responses API usage through the OpenAI Python SDK.
 - A direct SDK workspace with memory retrieval, model generation, and persistence.
 - A LangGraph workspace with explicit recall, draft, and persist nodes.
+- A WayFlow workspace that demonstrates the memory library inside a reusable assistant runtime.
 - Per-framework memory users:
   - OpenAI SDK: `ociopenai`
   - LangGraph: `ocigraph`
+  - WayFlow: `ociwayflow`
 - Bottom diagnostics tabs for logs, call progress, retrieval code, API metadata, time, summary, and context card.
 - Terraform-assisted OCI setup for Generative AI project/API key and Autonomous Database.
 
@@ -34,6 +37,7 @@ flowchart LR
     Service --> Runtime[AgentMemoryRuntime]
     Service --> Responses[OCI Responses Client]
     Service --> Graph[LangGraph StateGraph]
+    Service --> WayFlow[WayFlow Agent]
     Runtime --> Memory[Oracle Agent Memory]
     Runtime --> DB[(Oracle AI Database)]
     Responses --> OCI[OCI Generative AI]
@@ -66,7 +70,7 @@ features/
   agent_memory/
     infra/terraform/         # OCI project, API key, ADB, wallet, network setup
     scripts/                 # OCI CLI wrapper scripts used by Terraform
-    service.py               # Live memory, Responses, and LangGraph runtime
+  service.py               # Live memory, Responses, LangGraph, and WayFlow runtime
     README.md
 streamlit_app.py             # Primary local app entrypoint
 bash.sh                      # Setup/provision/start wrapper
@@ -135,9 +139,10 @@ For a new memory-backed agent, the main reuse points are:
 
 - `AgentMemoryRuntime.search()` for scoped retrieval.
 - `AgentMemoryRuntime.snapshot()` for summary, context card, and memory hits.
-- `LiveOracleAgentMemoryService.process_turn()` for framework routing.
+- `LiveOracleAgentMemoryService.process_turn()` for OpenAI SDK, LangGraph, and WayFlow routing.
 - `_run_openai_sdk_turn()` for direct model calls.
 - `_get_langgraph_app()` for explicit graph orchestration.
+- `_get_wayflow_agent()` and `_run_wayflow_turn()` for WayFlow agent execution.
 
 ## Memory Retrieval Code Path
 

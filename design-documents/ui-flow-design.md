@@ -34,13 +34,13 @@ This keeps the main canvas focused on the active demo.
 
 ## Main Workspace
 
-The workspace header identifies the current path: Overview, OpenAI SDK, or LangGraph. Runtime chips show whether the live backend is ready, which execution model is selected, and which memory user is active.
+The workspace header identifies the current path: Overview, OpenAI SDK, LangGraph, or WayFlow. Runtime chips show whether the live backend is ready, which execution model is selected, and which memory user is active.
 
-The metrics bar shows the current memory user, thread id, message count, and last activity. The OpenAI SDK workspace defaults to `ociopenai`, and the LangGraph workspace defaults to `ocigraph`. These values help the presenter explain which memory scope is active.
+The metrics bar shows the current memory user, thread id, message count, and last activity. The OpenAI SDK workspace defaults to `ociopenai`, LangGraph defaults to `ocigraph`, and WayFlow defaults to `ociwayflow`. These values help the presenter explain which memory scope is active.
 
 ## Live Flow View
 
-The live flow view shows five stages. For OpenAI SDK, the stages are thread, retrieval, API call, persist, and refresh. For LangGraph, the stages are thread, recall node, draft node, persist node, and refresh. After a live turn, the flow uses backend progress entries to show what happened.
+The live flow view shows five stages. For OpenAI SDK, the stages are thread, retrieval, API call, persist, and refresh. For LangGraph, the stages are thread, recall node, draft node, persist node, and refresh. For WayFlow, the stages are thread, memory recall, WayFlow agent, persist, and refresh. After a live turn, the flow uses backend progress entries to show what happened.
 
 ## Conversation Area
 
@@ -60,13 +60,14 @@ The bottom diagnostics area keeps deeper technical detail available without occu
 ## Demo Flow
 
 1. Open the app and sign in with the local demo credentials.
-2. Confirm that OpenAI SDK uses `ociopenai` and LangGraph uses `ocigraph` in the left sidebar.
+2. Confirm that OpenAI SDK uses `ociopenai`, LangGraph uses `ocigraph`, and WayFlow uses `ociwayflow` in the left sidebar.
 3. Open the OpenAI SDK workspace.
 4. Send a prompt that benefits from recall.
 5. Show the live flow and bottom `Call` tab.
 6. Open `Retrieval Code` to explain the exact memory retrieval call.
 7. Switch to LangGraph and run a similar prompt.
-8. Compare the flow labels and logs.
+8. Switch to WayFlow and run a similar prompt.
+9. Compare the flow labels and logs.
 
 ## Design Constraints
 

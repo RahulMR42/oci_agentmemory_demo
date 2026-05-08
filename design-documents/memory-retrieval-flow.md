@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document explains where actual memory retrieval happens in the demo. The retrieval path is shared by both the direct OpenAI SDK workspace and the LangGraph workspace.
+This document explains where actual memory retrieval happens in the demo. The retrieval path is shared by the direct OpenAI SDK workspace, the LangGraph workspace, and the WayFlow workspace.
 
 ## Core Retrieval Call
 
@@ -15,7 +15,7 @@ results = self._memory.search(
 )
 ```
 
-The `query` is the user message unless the UI supplies a search override. The `scope` constrains retrieval to the selected memory user. By default, OpenAI SDK uses `ociopenai` and LangGraph uses `ocigraph`.
+The `query` is the user message unless the UI supplies a search override. The `scope` constrains retrieval to the selected memory user. By default, OpenAI SDK uses `ociopenai`, LangGraph uses `ocigraph`, and WayFlow uses `ociwayflow`.
 
 ## Snapshot Builder
 
@@ -73,6 +73,29 @@ def recall_context(state: LangGraphTurnState) -> LangGraphTurnState:
         "context_card": snapshot.context_card,
         "memory_hits": snapshot.memory_hits,
     }
+```
+
+## WayFlow Path
+
+The WayFlow path runs the same memory snapshot before starting the WayFlow agent conversation.
+
+```python
+snapshot = self._runtime.snapshot(
+    thread=thread,
+    user_id=user_id,
+    query=search_query or user_message,
+)
+agent = self._get_wayflow_agent(agent_id=agent_id)
+conversation = agent.start_conversation()
+conversation.append_user_message(
+    self._reply_prompt(
+        frame="WayFlow Agent conversation with Agent Memory recall.",
+        user_message=user_message,
+        snapshot=snapshot,
+    )
+)
+conversation.execute()
+assistant_draft = conversation.get_last_message().content
 ```
 
 ## Prompt Grounding

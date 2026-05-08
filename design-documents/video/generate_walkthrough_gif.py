@@ -79,7 +79,7 @@ def base() -> tuple[Image.Image, ImageDraw.ImageDraw]:
     text(draw, (40, 78), "OCI Agent Memory Console", F_BODY, max_width=180)
     text(draw, (40, 140), "Main\nConfig\nKeys", F_BODY, MUTED)
     text(draw, (40, 230), "Workspace", F_H2)
-    text(draw, (40, 265), "Overview\nOpenAI SDK\nLangGraph", F_BODY, MUTED)
+    text(draw, (40, 265), "Overview\nOpenAI SDK\nLangGraph\nWayFlow", F_BODY, MUTED)
     return img, draw
 
 
@@ -91,7 +91,7 @@ def frame(title: str, body: str, highlight: str) -> Image.Image:
     text(draw, (310, 124), body, F_SMALL, MUTED, max_width=780)
 
     panel(draw, (280, 170, 1250, 240))
-    metrics = [("Memory user", "ociopenai / ocigraph"), ("Thread", "Pending"), ("Messages", "0"), ("Last activity", "No turns yet")]
+    metrics = [("Memory user", "ociopenai / ocigraph / ociwayflow"), ("Thread", "Pending"), ("Messages", "0"), ("Last activity", "No turns yet")]
     for idx, (label, value) in enumerate(metrics):
         x = 310 + idx * 230
         draw.line((x, 190, x, 225), fill=ACCENT, width=3)
@@ -135,6 +135,7 @@ slides = [
     ("OCI Agent Memory Console", "A live workspace for memory recall, OCI Responses, and persistence.", "Thread"),
     ("OpenAI SDK Workspace", "Direct SDK path: retrieve memory, call OCI Responses, persist the turn.", "Recall"),
     ("LangGraph Workspace", "The same memory backend represented as explicit graph nodes.", "API call"),
+    ("WayFlow Workspace", "WayFlow Agent conversation over the same retrieved memory context.", "API call"),
     ("Memory Persistence", "Completed turns are stored back into Oracle Agent Memory for future recall.", "Persist"),
     ("Technical Diagnostics", "Use bottom tabs to explain logs, call details, API metadata, and retrieval code.", "Retrieval Code"),
 ]
