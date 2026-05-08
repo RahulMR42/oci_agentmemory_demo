@@ -328,6 +328,18 @@ class AgentMemoryRuntime:
             ]
         )
 
+    def delete_thread(self, thread_id: str) -> int:
+        normalized_thread_id = thread_id.strip()
+        if not normalized_thread_id:
+            raise ValueError("A thread id is required before deleting current thread memory.")
+        return int(self._memory.delete_thread(normalized_thread_id))
+
+    def delete_user_memory(self, user_id: str) -> int:
+        normalized_user_id = user_id.strip()
+        if not normalized_user_id:
+            raise ValueError("A user id is required before deleting user memory.")
+        return int(self._memory.delete_user(normalized_user_id, cascade=True))
+
     def read_summary(self, thread: object) -> str:
         try:
             summary_messages = thread.get_summary(except_last=1, token_budget=250)
@@ -455,6 +467,12 @@ class AgentMemoryFeatureService:
     ) -> DemoState:
         raise NotImplementedError
 
+    def delete_thread(self, *, thread_id: str) -> int:
+        raise NotImplementedError
+
+    def delete_user_memory(self, *, user_id: str) -> int:
+        raise NotImplementedError
+
 
 class UnavailableOracleAgentMemoryService(AgentMemoryFeatureService):
     def __init__(self, *, reason: str, details: list[str] | None = None) -> None:
@@ -483,6 +501,14 @@ class UnavailableOracleAgentMemoryService(AgentMemoryFeatureService):
         search_query: str = "",
     ) -> DemoState:
         del framework, thread_id, user_id, agent_id, user_message, assistant_message, manual_memory, search_query
+        raise RuntimeError(self._reason)
+
+    def delete_thread(self, *, thread_id: str) -> int:
+        del thread_id
+        raise RuntimeError(self._reason)
+
+    def delete_user_memory(self, *, user_id: str) -> int:
+        del user_id
         raise RuntimeError(self._reason)
 
 
@@ -560,6 +586,12 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
             user_message=normalized_message,
             search_query=search_query.strip(),
         )
+
+    def delete_thread(self, *, thread_id: str) -> int:
+        return self._runtime.delete_thread(thread_id)
+
+    def delete_user_memory(self, *, user_id: str) -> int:
+        return self._runtime.delete_user_memory(user_id)
 
     def _reply_prompt(self, *, frame: str, user_message: str, snapshot: ThreadSnapshot, extra_guidance: str = "") -> str:
         return (

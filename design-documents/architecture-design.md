@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The application demonstrates an enterprise assistant backed by Oracle Agent Memory and OCI Generative AI. It lets a user compare three execution styles against the same live memory backend: a direct OpenAI SDK path, a LangGraph orchestration path, and a WayFlow assistant-runtime path. The UI is designed as an operational console, not a marketing page, so the main workflow stays focused while implementation details remain available in bottom diagnostics tabs.
+The application demonstrates an enterprise assistant backed by Oracle Agent Memory and OCI Generative AI. It lets a user compare three execution styles against the same live memory backend: a direct OpenAI SDK path, a LangGraph orchestration path, and a WayFlow assistant-runtime path. The UI is designed as an operational console, not a marketing page, so the main workflow stays focused while implementation details remain available in a collapsible Diagnostics section.
 
 ## Runtime Components
 

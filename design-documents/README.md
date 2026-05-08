@@ -5,7 +5,7 @@ This folder contains the design and walkthrough material for the Streamlit demo.
 ## Documents
 
 - [Architecture Design](architecture-design.md): end-to-end system architecture, runtime components, data flow, and operational boundaries.
-- [UI Flow Design](ui-flow-design.md): user-facing workspace structure, navigation model, diagnostics tabs, and demo flow.
+- [UI Flow Design](ui-flow-design.md): user-facing workspace structure, navigation model, collapsible diagnostics, and demo flow.
 - [Memory Retrieval Flow](memory-retrieval-flow.md): the exact call path used to retrieve summary, context card, and memory hits from Oracle Agent Memory.
 - [Video Narration Script](video-narration-script.md): timed narration and storyboard for a walkthrough recording.
 

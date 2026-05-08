@@ -6,7 +6,7 @@ An enterprise-ready Streamlit demo for Oracle Agent Memory with OCI Generative A
 - **LangGraph path**: explicit `StateGraph` orchestration using the same Oracle Agent Memory backend.
 - **WayFlow path**: Oracle WayFlow `Agent` conversation over the same retrieved memory context.
 
-The app is intentionally built as an operations console. It shows the chat, live execution flow, retrieved memory, backend logs, API metadata, and the actual retrieval-code path used during each turn.
+The app is intentionally built as an operations console. It shows the chat, live execution flow, retrieved memory, backend logs, API metadata, and the actual memory SDK paths used during each turn.
 
 ## Walkthrough
 
@@ -25,7 +25,7 @@ Video version: [agent-memory-ui-flow.mp4](design-documents/video/agent-memory-ui
   - OpenAI SDK: `ociopenai`
   - LangGraph: `ocigraph`
   - WayFlow: `ociwayflow`
-- Bottom diagnostics tabs for logs, call progress, retrieval code, API metadata, time, summary, and context card.
+- Collapsible diagnostics for logs, call progress, SDK calls, API metadata, time, summary, and context card.
 - Terraform-assisted OCI setup for Generative AI project/API key and Autonomous Database.
 
 ## Architecture
@@ -144,7 +144,7 @@ For a new memory-backed agent, the main reuse points are:
 - `_get_langgraph_app()` for explicit graph orchestration.
 - `_get_wayflow_agent()` and `_run_wayflow_turn()` for WayFlow agent execution.
 
-## Memory Retrieval Code Path
+## Memory SDK Code Path
 
 The actual retrieval happens in `features/agent_memory/service.py`:
 
@@ -167,7 +167,7 @@ def snapshot(self, *, thread: object, user_id: str, query: str) -> ThreadSnapsho
     )
 ```
 
-The UI also exposes this path in the bottom **Retrieval Code** tab so reviewers can see where memory retrieval happens while the app is running.
+The UI also exposes this path in the collapsible **Diagnostics** section under **SDK Calls** so reviewers can see where memory retrieval, persistence, and deletion happen while the app is running.
 
 ## Configuration
 

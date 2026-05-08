@@ -30,7 +30,7 @@ The main workspace keeps conversation history on the left and the latest respons
 
 ### 0:55 - 1:10: Diagnostics
 
-The bottom tabs expose implementation detail when needed. Logs show backend events, Call shows progress and memory hits, Retrieval Code shows the exact memory search path, API shows model and thread identifiers, Time shows activity metadata, and Other shows notes, summary, and context card.
+The collapsible Diagnostics section exposes implementation detail when needed. Logs show backend events, Call shows progress and memory hits, SDK Calls shows the exact memory search, persistence, and deletion paths, API shows model and thread identifiers, Time shows activity metadata, and Memory shows notes, summary, and context card.
 
 ### 1:10 - 1:15: Close
 

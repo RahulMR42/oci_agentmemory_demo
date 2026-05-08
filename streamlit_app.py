@@ -720,6 +720,31 @@ def _reset_all_frameworks(service) -> None:
         _reset_framework(service, spec.slug)
 
 
+def _blank_state_with_log(service, framework: str, *, user_id: str, log: BackendLog, note: str) -> DemoState:
+    state = service.blank_state(
+        framework=framework,
+        user_id=user_id,
+    )
+    state.backend_logs = [log]
+    state.progress = [note]
+    state.notes = [note]
+    return state
+
+
+def _reset_states_for_deleted_user(service, deleted_user_id: str, log: BackendLog, note: str) -> None:
+    for spec in FRAMEWORK_SPECS:
+        if _framework_user_id(spec.slug) == deleted_user_id:
+            st.session_state[_state_key(spec.slug)] = _blank_state_with_log(
+                service,
+                spec.slug,
+                user_id=deleted_user_id,
+                log=log,
+                note=note,
+            )
+            st.session_state[_error_key(spec.slug)] = ""
+            _queue_input_clear(spec.slug)
+
+
 def _go_to_page(page_label: str) -> None:
     st.session_state.pending_nav_page = page_label
     st.rerun()
@@ -1154,6 +1179,80 @@ def _run_framework_turn(service, spec: FrameworkSpec) -> None:
         st.session_state[error_key] = str(exc)
 
 
+def _render_memory_controls(service, spec: FrameworkSpec, state: DemoState) -> None:
+    state_key = _state_key(spec.slug)
+    error_key = _error_key(spec.slug)
+    user_id = _framework_user_id(spec.slug)
+
+    with st.expander("🧹 Memory controls", expanded=False):
+        st.caption("Delete persisted Oracle Agent Memory records for this workspace scope.")
+
+        confirm_thread = st.checkbox(
+            "Confirm current thread deletion",
+            key=f"confirm_delete_thread_{spec.slug}",
+            disabled=not bool(state.thread_id),
+        )
+        if st.button(
+            "🧹 Clear current thread",
+            key=f"delete_thread_{spec.slug}",
+            use_container_width=True,
+            disabled=not bool(state.thread_id) or not confirm_thread,
+        ):
+            try:
+                thread_id = state.thread_id or ""
+                deleted = service.delete_thread(thread_id=thread_id)
+                note = f"Deleted current Agent Memory thread `{thread_id}` and cleared this workspace state."
+                st.session_state[state_key] = _blank_state_with_log(
+                    service,
+                    spec.slug,
+                    user_id=user_id,
+                    log=BackendLog(
+                        "OracleAgentMemory.delete_thread",
+                        f"Called `delete_thread(thread_id={thread_id!r})`; deleted {deleted} thread row.",
+                    ),
+                    note=note,
+                )
+                st.session_state[error_key] = ""
+                _queue_input_clear(spec.slug)
+                st.rerun()
+            except Exception as exc:
+                st.session_state[error_key] = str(exc)
+
+        st.divider()
+        st.caption(f"Selected memory user: `{user_id}`. This deletes all memory scoped to that user.")
+        confirm_user = st.checkbox(
+            f"Confirm all memory deletion for `{user_id}`",
+            key=f"confirm_delete_user_{spec.slug}",
+        )
+        typed_user = st.text_input(
+            "Type the memory user to confirm",
+            key=f"delete_user_typed_{spec.slug}",
+            placeholder=user_id,
+        )
+        user_confirmed = confirm_user and typed_user.strip() == user_id
+        if st.button(
+            "🗑️ Delete all user memory",
+            key=f"delete_user_{spec.slug}",
+            use_container_width=True,
+            disabled=not user_confirmed,
+        ):
+            try:
+                deleted = service.delete_user_memory(user_id=user_id)
+                note = f"Deleted all Agent Memory records scoped to user `{user_id}` and reset matching workspaces."
+                _reset_states_for_deleted_user(
+                    service,
+                    user_id,
+                    log=BackendLog(
+                        "OracleAgentMemory.delete_user",
+                        f"Called `delete_user(user_id={user_id!r}, cascade=True)`; deleted {deleted} user profile row.",
+                    ),
+                    note=note,
+                )
+                st.rerun()
+            except Exception as exc:
+                st.session_state[error_key] = str(exc)
+
+
 def _render_chat_history(state: DemoState) -> None:
     if not state.messages:
         st.info("No chat yet. Send the first live turn from the composer on the right.")
@@ -1208,12 +1307,12 @@ def _render_memory_details(state: DemoState) -> None:
     st.code(state.context_card or "No context card yet.", language="xml")
 
 
-def _render_retrieval_code(spec: FrameworkSpec) -> None:
-    st.markdown("**Where memory retrieval happens**")
+def _render_sdk_calls(spec: FrameworkSpec) -> None:
+    st.markdown("**Memory SDK calls**")
     st.caption("These snippets mirror the live service path in `features/agent_memory/service.py`.")
 
-    # The code tab is intentionally a short teaching snippet instead of a full
-    # file dump. It shows the exact search/scope boundary reviewers usually ask for.
+    # This diagnostics tab is intentionally a short teaching snippet instead of
+    # a full file dump. It shows the exact SDK boundaries reviewers usually ask for.
     st.code(
         """def snapshot(self, *, thread: object, user_id: str, query: str) -> ThreadSnapshot:
     return ThreadSnapshot(
@@ -1241,6 +1340,24 @@ def search(self, *, query: str, user_id: str) -> list[MemoryHit]:
         )
         for result in results[:6]
     ]""",
+        language="python",
+    )
+
+    st.markdown("**Persistence and deletion**")
+    st.code(
+        """def persist_turn(self, *, thread: object, user_message: str, assistant_message: str) -> None:
+    thread.add_messages(
+        [
+            {"role": "user", "content": user_message},
+            {"role": "assistant", "content": assistant_message},
+        ]
+    )
+
+def delete_thread(self, thread_id: str) -> int:
+    return self._memory.delete_thread(thread_id)
+
+def delete_user_memory(self, user_id: str) -> int:
+    return self._memory.delete_user(user_id, cascade=True)""",
         language="python",
     )
 
@@ -1314,49 +1431,50 @@ assistant_draft = self._responses.generate(
     )
 
 
-def _render_bottom_diagnostics(state: DemoState, spec: FrameworkSpec, settings) -> None:
-    logs_tab, call_tab, code_tab, api_tab, time_tab, details_tab = st.tabs(
-        ["Logs", "Call", "Retrieval Code", "API", "Time", "Other"]
-    )
+def _render_diagnostics(state: DemoState, spec: FrameworkSpec, settings) -> None:
+    with st.expander("Diagnostics", expanded=False):
+        logs_tab, call_tab, code_tab, api_tab, time_tab, details_tab = st.tabs(
+            ["Logs", "Call", "SDK Calls", "API", "Time", "Memory"]
+        )
 
-    with logs_tab:
-        _render_backend_logs(state.backend_logs)
+        with logs_tab:
+            _render_backend_logs(state.backend_logs)
 
-    with call_tab:
-        _render_progress(state)
-        st.markdown("**Retrieval results**")
-        if state.search_results:
-            for item in state.search_results:
-                score = item.score or "n/a"
-                _detail_row(item.kind, item.content, meta=f"score {score}")
-        else:
-            st.info("No memory retrieval results yet.")
+        with call_tab:
+            _render_progress(state)
+            st.markdown("**Retrieval results**")
+            if state.search_results:
+                for item in state.search_results:
+                    score = item.score or "n/a"
+                    _detail_row(item.kind, item.content, meta=f"score {score}")
+            else:
+                st.info("No memory retrieval results yet.")
 
-    with code_tab:
-        _render_retrieval_code(spec)
+        with code_tab:
+            _render_sdk_calls(spec)
 
-    with api_tab:
-        _detail_row("Framework", spec.label, meta=spec.execution_model)
-        _detail_row("Responses model", settings.oci_genai_chat_model)
-        _detail_row("OCI region", settings.oci_genai_region)
-        _detail_row("Agent id", state.agent_id)
-        _detail_row("Thread id", state.thread_id or "Pending")
+        with api_tab:
+            _detail_row("Framework", spec.label, meta=spec.execution_model)
+            _detail_row("Responses model", settings.oci_genai_chat_model)
+            _detail_row("OCI region", settings.oci_genai_region)
+            _detail_row("Agent id", state.agent_id)
+            _detail_row("Thread id", state.thread_id or "Pending")
 
-    with time_tab:
-        _detail_row("Last activity", _last_activity(state))
-        _detail_row("Visible messages", str(len(state.messages)))
-        _detail_row("Progress steps", f"{len(state.progress)} of {EXPECTED_PROGRESS_STEPS}")
+        with time_tab:
+            _detail_row("Last activity", _last_activity(state))
+            _detail_row("Visible messages", str(len(state.messages)))
+            _detail_row("Progress steps", f"{len(state.progress)} of {EXPECTED_PROGRESS_STEPS}")
 
-    with details_tab:
-        if state.notes:
-            for note in state.notes:
-                _detail_row("Note", note)
-        else:
-            st.info("No workspace notes yet.")
-        st.markdown("**Summary**")
-        st.code(state.summary or "No summary yet.", language="text")
-        st.markdown("**Context card**")
-        st.code(state.context_card or "No context card yet.", language="xml")
+        with details_tab:
+            if state.notes:
+                for note in state.notes:
+                    _detail_row("Note", note)
+            else:
+                st.info("No workspace notes yet.")
+            st.markdown("**Summary**")
+            st.code(state.summary or "No summary yet.", language="text")
+            st.markdown("**Context card**")
+            st.code(state.context_card or "No context card yet.", language="xml")
 
 
 def _render_framework_workspace(service, settings, status: BackendStatus, spec: FrameworkSpec) -> None:
@@ -1401,9 +1519,10 @@ def _render_framework_workspace(service, settings, status: BackendStatus, spec: 
         if st.session_state[_error_key(spec.slug)]:
             st.error(st.session_state[_error_key(spec.slug)])
         _run_framework_turn(service, spec)
+        _render_memory_controls(service, spec, state)
 
-    _surface("Diagnostics", "Operational details stay at the bottom so the main workspace remains focused.", eyebrow="Bottom tabs")
-    _render_bottom_diagnostics(state, spec, settings)
+    _surface("Diagnostics", "Operational details stay collapsed until you need logs, SDK calls, or memory state.", eyebrow="Diagnostics")
+    _render_diagnostics(state, spec, settings)
 
 
 def main() -> None:

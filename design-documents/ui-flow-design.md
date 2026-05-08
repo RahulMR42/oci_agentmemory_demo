@@ -13,7 +13,7 @@ flowchart TB
     Metrics[Key metrics: user, thread, messages, activity]
     Flow[Live call and retrieval path]
     Workspace[Chat, latest response, composer]
-    Diagnostics[Bottom tabs: logs, call, retrieval code, API, time, other]
+    Diagnostics[Collapsible diagnostics: logs, call, SDK calls, API, time, memory]
 
     Sidebar --> Header
     Header --> Metrics
@@ -46,16 +46,16 @@ The live flow view shows five stages. For OpenAI SDK, the stages are thread, ret
 
 The conversation area is split into chat history and a right-side response/composer panel. The chat history shows the durable conversation record. The response panel shows the latest answer and lets the presenter send the next prompt.
 
-## Bottom Diagnostics Tabs
+## Diagnostics
 
-The bottom diagnostics area keeps deeper technical detail available without occupying the primary workflow:
+The collapsible diagnostics area keeps deeper technical detail available without occupying the primary workflow:
 
 - Logs: backend trace messages.
 - Call: progress steps and retrieved memory results.
-- Retrieval Code: focused code snippets showing where memory retrieval happens.
+- SDK Calls: focused code snippets showing where memory retrieval, persistence, and deletion happen.
 - API: framework, model, region, agent id, and thread id.
 - Time: last activity, visible message count, progress count.
-- Other: notes, summary, and context card.
+- Memory: notes, summary, and context card.
 
 ## Demo Flow
 
@@ -64,7 +64,7 @@ The bottom diagnostics area keeps deeper technical detail available without occu
 3. Open the OpenAI SDK workspace.
 4. Send a prompt that benefits from recall.
 5. Show the live flow and bottom `Call` tab.
-6. Open `Retrieval Code` to explain the exact memory retrieval call.
+6. Open Diagnostics, then `SDK Calls`, to explain the exact memory retrieval and deletion calls.
 7. Switch to LangGraph and run a similar prompt.
 8. Switch to WayFlow and run a similar prompt.
 9. Compare the flow labels and logs.
