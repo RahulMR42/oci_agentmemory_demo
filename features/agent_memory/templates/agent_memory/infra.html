@@ -1,0 +1,55 @@
+{% extends "app/templates/base.html" %}
+
+{% block content %}
+<section class="section-heading">
+  <p class="eyebrow">Infrastructure</p>
+  <h1>Terraform lives with the feature it supports</h1>
+  <p class="lead-copy">
+    The first slice uses Terraform in <code>features/agent_memory/infra/terraform</code>. It wraps the OCI CLI for
+    project and API-key creation, because those operational artifacts are part of the feature setup.
+  </p>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Terraform stack</h2>
+    <ul class="plain-list stack">
+      {% for item in terraform_items %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  <article class="panel">
+    <h2>Values needed to apply</h2>
+    <ul class="plain-list stack">
+      {% for item in required_values %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </article>
+</section>
+
+<section class="columns">
+  <article class="panel">
+    <h2>Apply sequence</h2>
+    <pre class="code-block"><code>cp features/agent_memory/infra/terraform/terraform.tfvars.example \
+   features/agent_memory/infra/terraform/terraform.tfvars
+
+terraform -chdir=features/agent_memory/infra/terraform init
+terraform -chdir=features/agent_memory/infra/terraform apply
+</code></pre>
+  </article>
+
+  <article class="panel">
+    <h2>App env mapping</h2>
+    <pre class="code-block"><code>OCI_GENAI_REGION=&lt;terraform region&gt;
+OCI_GENAI_PROJECT_OCID=&lt;generated project id&gt;
+OCI_GENAI_API_KEY=&lt;copy one key value from generated api key response&gt;
+
+AGENT_MEMORY_DB_USER=&lt;oracle ai database user&gt;
+AGENT_MEMORY_DB_PASSWORD=&lt;oracle ai database password&gt;
+AGENT_MEMORY_DB_DSN=&lt;oracle ai database connect string&gt;</code></pre>
+  </article>
+</section>
+{% endblock %}

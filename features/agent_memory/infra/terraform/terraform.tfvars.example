@@ -1,0 +1,48 @@
+# Minimum required input if you are not using TF_VAR_compartment_ocid.
+compartment_ocid = "ocid1.compartment.oc1..replaceMe"
+
+# Optional overrides. Everything below already has a Terraform default.
+# Terraform appends a stable random 6-character suffix to generated OCI resource names.
+# Set the base names below and let Terraform add the suffix automatically.
+# region = "us-chicago-1"
+# policy_compartment_ocid = "ocid1.compartment.oc1..replaceMe"
+# oci_cli_profile = "DEFAULT"
+# project_display_name = "enterprise-agent-demo-project"
+# project_description = "Project for the enterprise agent demo feature"
+# api_key_display_name = "enterprise-agent-demo-api-key"
+# api_key_key_one_name = "primary"
+# api_key_key_two_name = "secondary"
+# api_key_expiry_rfc3339 = "2030-12-31T23:59:59Z"
+# api_key_policy_group_name = ""
+# app_name = "OCI Agent Memory Workspace"
+# agent_memory_mode = "live"
+# agent_memory_schema_policy = "create_if_necessary"
+# oci_genai_chat_model = "openai.gpt-oss-120b"
+# adb_display_name = "agent-memory-autonomous-db"
+# adb_db_name_prefix = "AGMEM"
+# adb_db_version = "26ai"
+# adb_db_workload = "OLTP"
+# adb_compute_model = "ECPU"
+# adb_compute_count = 2
+# adb_data_storage_size_in_tbs = 1
+# adb_license_model = "LICENSE_INCLUDED"
+# adb_enable_auto_scaling = true
+# adb_enable_storage_auto_scaling = true
+# adb_is_mtls_connection_required = true
+# adb_connection_service_level = "MEDIUM"
+# adb_enable_private_endpoint = false
+# adb_private_endpoint_label_prefix = "agmemadb"
+# adb_vcn_cidr = "10.42.0.0/16"
+# adb_subnet_cidr = "10.42.10.0/24"
+# adb_client_cidr = "10.42.0.0/16"
+# adb_vcn_dns_label = "agmemvcn"
+# adb_subnet_dns_label = "adbsubnet"
+
+# Optional DB overrides. Leave blank to auto-generate ADMIN password, wallet password,
+# wallet directory, and connection string from the provisioned Autonomous Database.
+# agent_memory_db_password = ""
+# agent_memory_db_dsn = ""
+# agent_memory_wallet_dir = ""
+# agent_memory_wallet_password = ""
+# agent_memory_llm_model = "oci/cohere.command-latest"
+# agent_memory_embedding_model = "oci/cohere.embed-v4.0"
