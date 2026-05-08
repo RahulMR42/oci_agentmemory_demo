@@ -117,17 +117,17 @@ def frame(title: str, body: str, highlight: str) -> Image.Image:
         text(draw, (x1 + 14, 416), value, F_SMALL, MUTED, max_width=128)
 
     panel(draw, (280, 525, 1250, 690))
-    text(draw, (310, 555), "BOTTOM DIAGNOSTICS", F_TINY, ACCENT)
-    tabs = ["Logs", "Call", "Retrieval Code", "API", "Time", "Other"]
+    text(draw, (310, 555), "DIAGNOSTICS", F_TINY, ACCENT)
+    tabs = ["Logs", "Call", "SDK Calls", "API", "Time", "Memory"]
     x = 310
     for tab in tabs:
-        w = 84 if tab != "Retrieval Code" else 150
-        active = highlight == "Retrieval Code" and tab == "Retrieval Code"
+        w = 84 if tab != "SDK Calls" else 130
+        active = highlight == "SDK Calls" and tab == "SDK Calls"
         panel(draw, (x, 595, x + w, 635), fill=SOFT if active else (248, 250, 252), outline=ACCENT if active else LINE, width=2 if active else 1)
         text(draw, (x + 12, 607), tab, F_SMALL, ACCENT if active else INK)
         x += w + 10
-    if highlight == "Retrieval Code":
-        text(draw, (310, 650), "Shows snapshot() and self._memory.search(...) scoped by SearchScope(user_id).", F_SMALL, GREEN)
+    if highlight == "SDK Calls":
+        text(draw, (310, 650), "Shows search, add_messages, delete_thread, and delete_user SDK calls.", F_SMALL, GREEN)
     return img
 
 
@@ -137,7 +137,7 @@ slides = [
     ("LangGraph Workspace", "The same memory backend represented as explicit graph nodes.", "API call"),
     ("WayFlow Workspace", "WayFlow Agent conversation over the same retrieved memory context.", "API call"),
     ("Memory Persistence", "Completed turns are stored back into Oracle Agent Memory for future recall.", "Persist"),
-    ("Technical Diagnostics", "Use bottom tabs to explain logs, call details, API metadata, and retrieval code.", "Retrieval Code"),
+    ("Technical Diagnostics", "Use Diagnostics to explain logs, call details, API metadata, and SDK calls.", "SDK Calls"),
 ]
 
 frames: list[Image.Image] = []
