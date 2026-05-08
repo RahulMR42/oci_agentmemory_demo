@@ -943,19 +943,19 @@ def _render_sidebar(settings, status: BackendStatus, service) -> str:
 
         st.markdown("**Memory scope**")
         st.text_input(
-            "OpenAI SDK user",
+            f"OpenAI SDK user (default: {FRAMEWORK_USER_DEFAULTS[OPENAI_SDK_FRAMEWORK]})",
             key=_framework_user_key(OPENAI_SDK_FRAMEWORK),
-            help="Default memory user for the direct OpenAI SDK workspace.",
+            help=f"Default memory user for the direct OpenAI SDK workspace: {FRAMEWORK_USER_DEFAULTS[OPENAI_SDK_FRAMEWORK]}.",
         )
         st.text_input(
-            "LangGraph user",
+            f"LangGraph user (default: {FRAMEWORK_USER_DEFAULTS[LANGGRAPH_FRAMEWORK]})",
             key=_framework_user_key(LANGGRAPH_FRAMEWORK),
-            help="Default memory user for the OCI LangGraph workspace.",
+            help=f"Default memory user for the OCI LangGraph workspace: {FRAMEWORK_USER_DEFAULTS[LANGGRAPH_FRAMEWORK]}.",
         )
         st.text_input(
-            "WayFlow user",
+            f"WayFlow user (default: {FRAMEWORK_USER_DEFAULTS[WAYFLOW_FRAMEWORK]})",
             key=_framework_user_key(WAYFLOW_FRAMEWORK),
-            help="Default memory user for the WayFlow workspace.",
+            help=f"Default memory user for the WayFlow workspace: {FRAMEWORK_USER_DEFAULTS[WAYFLOW_FRAMEWORK]}.",
         )
         st.caption("Separate users make the memory scopes easy to distinguish in demos.")
 
