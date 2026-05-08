@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The application demonstrates an enterprise assistant backed by Oracle Agent Memory and OCI Generative AI. It lets a user compare two execution styles against the same live memory backend: a direct OpenAI SDK path and a LangGraph orchestration path. The UI is designed as an operational console, not a marketing page, so the main workflow stays focused while implementation details remain available in bottom diagnostics tabs.
+The application demonstrates an enterprise assistant backed by Oracle Agent Memory and OCI Generative AI. It lets a user compare three execution styles against the same live memory backend: a direct OpenAI SDK path, a LangGraph orchestration path, and a WayFlow assistant-runtime path. The UI is designed as an operational console, not a marketing page, so the main workflow stays focused while implementation details remain available in bottom diagnostics tabs.
 
 ## Runtime Components
 
@@ -12,6 +12,7 @@ flowchart LR
     Streamlit --> Service[AgentMemoryFeatureService]
     Service --> Runtime[AgentMemoryRuntime]
     Service --> Responses[OCI Responses Client]
+    Service --> WayFlow[WayFlow Agent]
     Runtime --> OAM[Oracle Agent Memory]
     Runtime --> DB[(Oracle AI Database)]
     Responses --> OCI[OCI Generative AI]
@@ -22,7 +23,7 @@ The Streamlit UI in `streamlit_app.py` owns session state, navigation, form subm
 
 ## Feature Boundaries
 
-The app keeps the demo feature isolated under `features/agent_memory/`. The service layer contains framework definitions, runtime adapters, turn processing, memory rendering, backend status, and LangGraph construction. Terraform and setup scripts remain under `features/agent_memory/infra/terraform/` and `features/agent_memory/scripts/`.
+The app keeps the demo feature isolated under `features/agent_memory/`. The service layer contains framework definitions, runtime adapters, turn processing, memory rendering, backend status, LangGraph construction, and WayFlow agent construction. Terraform and setup scripts remain under `features/agent_memory/infra/terraform/` and `features/agent_memory/scripts/`.
 
 The old FastAPI templates still exist in the repository, but the primary local entrypoint is `streamlit_app.py`, as documented in `README.md`.
 
@@ -66,6 +67,12 @@ The LangGraph workspace uses the same live runtime but expresses the turn as gra
 
 This path is best for explaining orchestration, explicit state transitions, and how memory retrieval can become a named graph step.
 
+## WayFlow Path
+
+The WayFlow workspace uses `wayflowcore.Agent` with an OpenAI-compatible model configured for OCI Responses. It first retrieves Oracle Agent Memory context through the shared runtime, then starts a WayFlow agent conversation over the grounded prompt, persists the completed response, and returns the same `DemoState` contract to the UI.
+
+This path is best for demonstrating Oracle Agent Memory inside a reusable assistant runtime while keeping the memory retrieval boundary explicit.
+
 ## State Model
 
 `DemoState` is the UI contract. It contains the framework label, thread id, user id, agent id, messages, search results, progress steps, backend logs, notes, summary, context card, and latest assistant draft. Keeping this state object explicit lets the UI show chat, live flow, metrics, and diagnostics without coupling to Oracle SDK objects.
@@ -76,4 +83,4 @@ Backend availability is exposed through `BackendStatus`. Missing OCI or database
 
 ## Operational Notes
 
-The UI intentionally exposes non-secret identifiers such as project OCID and DB DSN in the sidebar for demo validation. Secrets such as passwords and API keys are not displayed. The OpenAI SDK workspace defaults to memory user `ociopenai`, while the LangGraph workspace defaults to `ocigraph`, making the two memory scopes easy to distinguish during a demo.
+The UI intentionally exposes non-secret identifiers such as project OCID and DB DSN in the sidebar for demo validation. Secrets such as passwords and API keys are not displayed. The OpenAI SDK workspace defaults to memory user `ociopenai`, LangGraph defaults to `ocigraph`, and WayFlow defaults to `ociwayflow`, making the memory scopes easy to distinguish during a demo.

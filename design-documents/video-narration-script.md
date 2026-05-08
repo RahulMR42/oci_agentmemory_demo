@@ -14,7 +14,7 @@ This is the OCI Agent Memory Console, a live demo workspace for showing how an e
 
 ### 0:08 - 0:18: Sidebar
 
-The left sidebar keeps the demo setup separate from the working area. The Main tab switches between Overview, OpenAI SDK, and LangGraph. The Config tab controls theme, model, region, and the two memory users: `ociopenai` for OpenAI SDK and `ocigraph` for LangGraph.
+The left sidebar keeps the demo setup separate from the working area. The Main tab switches between Overview, OpenAI SDK, LangGraph, and WayFlow. The Config tab controls theme, model, region, and the memory users: `ociopenai` for OpenAI SDK, `ocigraph` for LangGraph, and `ociwayflow` for WayFlow.
 
 ### 0:18 - 0:30: Workspace Header
 
@@ -22,7 +22,7 @@ The top of each workspace shows the active execution model, runtime status, sele
 
 ### 0:30 - 0:42: Live Flow
 
-The live call and retrieval path shows what happens during a turn. In the OpenAI SDK workspace, the app opens the thread, retrieves memory, calls OCI Responses, persists the result, and refreshes the UI. In LangGraph, the same backend flow appears as explicit graph nodes.
+The live call and retrieval path shows what happens during a turn. In the OpenAI SDK workspace, the app opens the thread, retrieves memory, calls OCI Responses, persists the result, and refreshes the UI. In LangGraph, the same backend flow appears as explicit graph nodes. In WayFlow, the retrieved memory context is handed to a WayFlow agent conversation.
 
 ### 0:42 - 0:55: Conversation
 

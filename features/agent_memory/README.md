@@ -65,7 +65,7 @@ If you want the raw manual steps instead of the wrapper:
 
 - The Streamlit app now runs only against live OCI and Oracle AI Database resources.
 - If required environment values are missing or the backend cannot start, the UI shows a setup blocker instead of a simulated mock experience.
-- The UI is now a left-sidebar multi-page studio with clean OpenAI SDK and LangGraph chat workspaces.
+- The UI is now a left-sidebar multi-page studio with clean OpenAI SDK, LangGraph, and WayFlow chat workspaces.
 
 ## Terraform actions
 
@@ -185,6 +185,7 @@ AGENT_MEMORY_WALLET_PASSWORD=<generated or overridden wallet password>
 - A left-rail multi-page Streamlit studio
 - A direct OpenAI SDK page using the current `responses.create()` path against OCI
 - A LangGraph page using a live `StateGraph` orchestration flow
+- A WayFlow page using a live `wayflowcore.Agent` conversation over retrieved memory context
 - Oracle Agent Memory integration path through the `oracleagentmemory` Python library
 - Retrieved memory, thread summary, context-card inspection, progress tracking, and backend logs for each live turn
 
@@ -231,3 +232,4 @@ features/agent_memory/
 - OCI Generative AI API keys: <https://docs.oracle.com/en-us/iaas/Content/generative-ai/api-keys.htm>
 - OCI Generative AI projects: <https://docs.oracle.com/en-us/iaas/Content/generative-ai/projects.htm>
 - LangGraph reference: <https://reference.langchain.com/python/langgraph/>
+- WayFlow project: <https://github.com/oracle/wayflow>

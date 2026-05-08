@@ -10,6 +10,7 @@ from features.agent_memory.service import (
     LANGGRAPH_FRAMEWORK,
     OPENAI_SDK_FRAMEWORK,
     REFERENCE_LINKS,
+    WAYFLOW_FRAMEWORK,
     BackendLog,
     BackendStatus,
     DemoState,
@@ -22,28 +23,32 @@ PAGE_LABELS = {
     "overview": "Overview",
     OPENAI_SDK_FRAMEWORK: "OpenAI SDK",
     LANGGRAPH_FRAMEWORK: "LangGraph",
+    WAYFLOW_FRAMEWORK: "WayFlow",
 }
 PAGE_OPTIONS = [
     PAGE_LABELS["overview"],
     PAGE_LABELS[OPENAI_SDK_FRAMEWORK],
     PAGE_LABELS[LANGGRAPH_FRAMEWORK],
+    PAGE_LABELS[WAYFLOW_FRAMEWORK],
 ]
 PAGE_TO_FRAMEWORK = {
     PAGE_LABELS[OPENAI_SDK_FRAMEWORK]: OPENAI_SDK_FRAMEWORK,
     PAGE_LABELS[LANGGRAPH_FRAMEWORK]: LANGGRAPH_FRAMEWORK,
+    PAGE_LABELS[WAYFLOW_FRAMEWORK]: WAYFLOW_FRAMEWORK,
 }
 FRAMEWORK_USER_DEFAULTS = {
     OPENAI_SDK_FRAMEWORK: "ociopenai",
     LANGGRAPH_FRAMEWORK: "ocigraph",
+    WAYFLOW_FRAMEWORK: "ociwayflow",
 }
-# Keep the two demo paths on separate memory scopes so retrieved memories,
+# Keep the demo paths on separate memory scopes so retrieved memories,
 # summaries, and context cards are easy to distinguish while presenting.
 THEME_OPTIONS = ("Light", "Dark")
 EXPECTED_PROGRESS_STEPS = 5
 APP_TITLE = "OCI Agent Memory Console"
 APP_SUBTITLE = (
     "Live comparison workspace for Oracle Agent Memory across direct OCI Responses "
-    "and LangGraph orchestration."
+    "LangGraph orchestration, and WayFlow assistant flows."
 )
 
 
@@ -803,6 +808,14 @@ def _render_live_flow(state: DemoState, spec: FrameworkSpec) -> None:
             ("Persist node", "Write completed turn"),
             ("Refresh", "Update chat and diagnostics"),
         ]
+    elif spec.slug == WAYFLOW_FRAMEWORK:
+        labels = [
+            ("Thread", "Open or create memory thread"),
+            ("Memory recall", "Fetch summary, context card, memory hits"),
+            ("WayFlow agent", "Run Agent conversation"),
+            ("Persist", "Write completed turn"),
+            ("Refresh", "Update chat and diagnostics"),
+        ]
     else:
         labels = [
             ("Thread", "Open or create memory thread"),
@@ -939,7 +952,12 @@ def _render_sidebar(settings, status: BackendStatus, service) -> str:
             key=_framework_user_key(LANGGRAPH_FRAMEWORK),
             help="Default memory user for the OCI LangGraph workspace.",
         )
-        st.caption("Separate users make the two memory scopes easy to distinguish in demos.")
+        st.text_input(
+            "WayFlow user",
+            key=_framework_user_key(WAYFLOW_FRAMEWORK),
+            help="Default memory user for the WayFlow workspace.",
+        )
+        st.caption("Separate users make the memory scopes easy to distinguish in demos.")
 
         st.markdown("**Model**")
         st.code(settings.oci_genai_chat_model or "Not configured", language="text")
@@ -1030,6 +1048,7 @@ def _render_overview(settings, status: BackendStatus) -> None:
             ("success", f"Theme: {st.session_state.theme_mode}"),
             ("live", f"OpenAI: {_framework_user_id(OPENAI_SDK_FRAMEWORK)}"),
             ("live", f"Graph: {_framework_user_id(LANGGRAPH_FRAMEWORK)}"),
+            ("live", f"WayFlow: {_framework_user_id(WAYFLOW_FRAMEWORK)}"),
         ],
     )
 
@@ -1053,8 +1072,8 @@ def _render_overview(settings, status: BackendStatus) -> None:
             "Pick a workspace from the left rail, send a real prompt, and expand the operational drawers only when you need implementation detail.",
             eyebrow="Flow",
         )
-        _detail_row("1. Use separate memory users", "OpenAI SDK uses `ociopenai` and LangGraph uses `ocigraph` by default so each memory scope is easy to identify.")
-        _detail_row("2. Run the same prompt twice", "Send the same task through the direct SDK path and then through the LangGraph path.")
+        _detail_row("1. Use separate memory users", "OpenAI SDK uses `ociopenai`, LangGraph uses `ocigraph`, and WayFlow uses `ociwayflow` by default.")
+        _detail_row("2. Run the same prompt across workspaces", "Send the same task through the direct SDK path, LangGraph path, and WayFlow path.")
         _detail_row("3. Inspect only what matters", "Open Progress, Backend logs, or Memory context when you want to explain how the answer was produced.")
     with context_col:
         _surface("Session", "Current workspace settings for the live console.", eyebrow="Context")
@@ -1238,6 +1257,29 @@ def search(self, *, query: str, user_id: str) -> list[MemoryHit]:
             )
         ],
     }""",
+            language="python",
+        )
+        return
+
+    if spec.slug == WAYFLOW_FRAMEWORK:
+        st.markdown("**WayFlow agent path**")
+        st.code(
+            """snapshot = self._runtime.snapshot(
+    thread=thread,
+    user_id=user_id,
+    query=search_query or user_message,
+)
+agent = self._get_wayflow_agent(agent_id=agent_id)
+conversation = agent.start_conversation()
+conversation.append_user_message(
+    self._reply_prompt(
+        frame="WayFlow Agent conversation with Agent Memory recall.",
+        user_message=user_message,
+        snapshot=snapshot,
+    )
+)
+conversation.execute()
+assistant_draft = conversation.get_last_message().content""",
             language="python",
         )
         return

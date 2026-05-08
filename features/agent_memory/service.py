@@ -19,6 +19,7 @@ REFERENCE_LINKS = {
 
 OPENAI_SDK_FRAMEWORK = "openai_sdk"
 LANGGRAPH_FRAMEWORK = "langgraph"
+WAYFLOW_FRAMEWORK = "wayflow"
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,20 @@ FRAMEWORK_SPECS: tuple[FrameworkSpec, ...] = (
         sidebar_copy="Best for demonstrating orchestration steps and graph execution.",
         default_agent_id="oci_langgraph_assistant",
         chips=("StateGraph", "Step trace", "Live infra"),
+    ),
+    FrameworkSpec(
+        slug=WAYFLOW_FRAMEWORK,
+        label="WayFlow",
+        eyebrow="Agent Flow",
+        headline="WayFlow assistant runtime on the same Agent Memory backend.",
+        summary=(
+            "Use Oracle WayFlow to demonstrate a reusable assistant flow: recall memory, run a "
+            "WayFlow agent over the grounded prompt, and persist the completed turn."
+        ),
+        execution_model="WayFlow `Agent` conversation",
+        sidebar_copy="Best for demonstrating the memory library inside Oracle's assistant runtime.",
+        default_agent_id="oci_wayflow_assistant",
+        chips=("WayFlow", "Agent", "Memory library"),
     ),
 )
 
@@ -211,7 +226,16 @@ def _format_memory_hits(memory_hits: list[MemoryHit]) -> str:
     return "\n".join(f"- {item.kind}: {item.content}" for item in memory_hits[:6])
 
 
-def _build_progress(existing_thread: bool, *, graph_mode: bool = False) -> list[str]:
+def _build_progress(existing_thread: bool, *, graph_mode: bool = False, wayflow_mode: bool = False) -> list[str]:
+    if wayflow_mode:
+        return [
+            "Attached to existing thread." if existing_thread else "Created a new thread.",
+            "Recalled summary, context card, and relevant memory.",
+            "Ran the WayFlow agent conversation with the grounded memory prompt.",
+            "Persisted the completed turn into Oracle Agent Memory.",
+            "Refreshed the final chat, summary, context view, and WayFlow trace.",
+        ]
+
     return [
         "Attached to existing thread." if existing_thread else "Created a new thread.",
         "Recalled summary, context card, and relevant memory.",
@@ -469,13 +493,14 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
         self._runtime = AgentMemoryRuntime(settings)
         self._responses = OciResponsesClient(settings)
         self._langgraph_app: object | None = None
+        self._wayflow_agent: object | None = None
 
     def status(self) -> BackendStatus:
         return BackendStatus(
             mode="live",
             label="Oracle Agent Memory + OCI Responses",
             ready=True,
-            reason="OpenAI SDK and LangGraph are live against the same OCI and Oracle AI Database backend.",
+            reason="OpenAI SDK, LangGraph, and WayFlow are live against the same OCI and Oracle AI Database backend.",
         )
 
     def blank_state(
@@ -514,6 +539,14 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
 
         if spec.slug == LANGGRAPH_FRAMEWORK:
             return self._run_langgraph_turn(
+                thread_id=thread_id,
+                user_id=resolved_user_id,
+                agent_id=resolved_agent_id,
+                user_message=normalized_message,
+                search_query=search_query.strip(),
+            )
+        if spec.slug == WAYFLOW_FRAMEWORK:
+            return self._run_wayflow_turn(
                 thread_id=thread_id,
                 user_id=resolved_user_id,
                 agent_id=resolved_agent_id,
@@ -663,6 +696,105 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
         builder.set_finish_point("persist_turn")
         self._langgraph_app = builder.compile()
         return self._langgraph_app
+
+    def _get_wayflow_agent(self, *, agent_id: str):
+        if self._wayflow_agent is not None:
+            return self._wayflow_agent
+
+        try:
+            from wayflowcore.agent import Agent
+            from wayflowcore.models import OpenAIAPIType, OpenAICompatibleModel
+        except ImportError as exc:
+            raise RuntimeError(
+                "WayFlow workspace requires `wayflowcore`. Run `pip install -e .` to install project dependencies."
+            ) from exc
+
+        project_headers = _project_headers(self._settings)
+
+        class OciResponsesWayFlowModel(OpenAICompatibleModel):
+            def _get_headers(self) -> dict[str, object]:
+                headers = super()._get_headers()
+                headers.update(project_headers)
+                return headers
+
+        model = OciResponsesWayFlowModel(
+            model_id=self._settings.oci_genai_chat_model,
+            base_url=_oci_openai_base_url(self._settings),
+            api_key=self._settings.oci_genai_api_key,
+            api_type=OpenAIAPIType.RESPONSES,
+            supports_tool_calling=False,
+            name="OCI Responses via WayFlow",
+            description="OpenAI-compatible OCI Responses model for the Agent Memory demo.",
+        )
+        self._wayflow_agent = Agent(
+            llm=model,
+            agent_id=agent_id,
+            name="OCI Agent Memory WayFlow Assistant",
+            description="WayFlow agent that answers using Oracle Agent Memory recall context.",
+            custom_instruction=(
+                "You are an enterprise assistant running inside WayFlow. "
+                "Use supplied Oracle Agent Memory context only when useful, keep answers concise, "
+                "and never invent prior user history."
+            ),
+            can_finish_conversation=True,
+        )
+        return self._wayflow_agent
+
+    def _run_wayflow_turn(
+        self,
+        *,
+        thread_id: str | None,
+        user_id: str,
+        agent_id: str,
+        user_message: str,
+        search_query: str,
+    ) -> DemoState:
+        had_thread = bool(thread_id)
+        thread = self._runtime.get_thread(thread_id=thread_id, user_id=user_id, agent_id=agent_id)
+        snapshot = self._runtime.snapshot(thread=thread, user_id=user_id, query=search_query or user_message)
+        agent = self._get_wayflow_agent(agent_id=agent_id)
+        prompt = self._reply_prompt(
+            frame="WayFlow `Agent` conversation with explicit Oracle Agent Memory recall.",
+            user_message=user_message,
+            snapshot=snapshot,
+            extra_guidance="Make it clear this response was produced through the WayFlow assistant runtime.",
+        )
+        conversation = agent.start_conversation()
+        conversation.append_user_message(prompt)
+        conversation.execute()
+        assistant_message = conversation.get_last_message()
+        assistant_draft = str(getattr(assistant_message, "content", "")).strip()
+        if not assistant_draft:
+            raise RuntimeError("WayFlow completed without returning an assistant message.")
+
+        self._runtime.persist_turn(
+            thread=thread,
+            user_message=user_message,
+            assistant_message=assistant_draft,
+        )
+
+        backend_logs = [
+            BackendLog("Thread", "Attached to existing thread." if had_thread else "Created a new thread for this framework page."),
+            BackendLog("Recall", f"Loaded summary, context card, and {len(snapshot.memory_hits)} memory hits for user `{user_id}`."),
+            BackendLog("WayFlow Agent", "Started a WayFlow agent conversation over the grounded memory prompt."),
+            BackendLog("Responses API", f"WayFlow called OCI Responses with model `{self._settings.oci_genai_chat_model}`."),
+            BackendLog("Persist", "Stored the user and WayFlow assistant messages back into Oracle Agent Memory."),
+        ]
+        notes = [
+            "This page demonstrates Oracle Agent Memory inside a WayFlow assistant runtime.",
+            "The flow keeps memory retrieval explicit before handing the grounded prompt to WayFlow.",
+        ]
+        return self._runtime.build_state(
+            framework=WAYFLOW_FRAMEWORK,
+            user_id=user_id,
+            agent_id=agent_id,
+            thread=thread,
+            assistant_draft=assistant_draft,
+            progress=_build_progress(had_thread, wayflow_mode=True),
+            backend_logs=backend_logs,
+            notes=notes,
+            recall_query=search_query or user_message,
+        )
 
     def _run_langgraph_turn(
         self,
