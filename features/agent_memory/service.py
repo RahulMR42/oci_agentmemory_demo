@@ -728,6 +728,7 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
         )
         self._wayflow_agent = Agent(
             llm=model,
+            tools=[],
             agent_id=agent_id,
             name="OCI Agent Memory WayFlow Assistant",
             description="WayFlow agent that answers using Oracle Agent Memory recall context.",
@@ -736,7 +737,10 @@ class LiveOracleAgentMemoryService(AgentMemoryFeatureService):
                 "Use supplied Oracle Agent Memory context only when useful, keep answers concise, "
                 "and never invent prior user history."
             ),
-            can_finish_conversation=True,
+            # The OCI openai.gpt-oss-120b Responses deployment used by this demo does not advertise
+            # tool-calling support, so keep WayFlow's default conversation tools disabled.
+            can_finish_conversation=False,
+            _add_talk_to_user_tool=False,
         )
         return self._wayflow_agent
 
